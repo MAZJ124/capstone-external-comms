@@ -109,17 +109,28 @@ class Eval_client:
         return response
     
     def handle_action(self, action):
-        match action:
-            case Action.shoot:
-                self.p1.shoot(self.p2, True)
-            case Action.shield:
-                self.p1.shield()
-            case Action.reload:
-                self.p1.reload()
-            case Action.bomb:
-                self.p1.bomb(self.p2, 0, True)
-            case Action.ironMan | Action.hulk | Action.captAmerica | Action.shangChi:
-                self.p1.harm_AI(self.p2, True)
+        # Not compatible with Python version on FPGA
+        # match action:
+        #     case Action.shoot:
+        #         self.p1.shoot(self.p2, True)
+        #     case Action.shield:
+        #         self.p1.shield()
+        #     case Action.reload:
+        #         self.p1.reload()
+        #     case Action.bomb:
+        #         self.p1.bomb(self.p2, 0, True)
+        #     case Action.ironMan | Action.hulk | Action.captAmerica | Action.shangChi:
+        #         self.p1.harm_AI(self.p2, True)
+        if action == Action.shoot:
+            self.p1.shoot(self.p2, True)
+        elif action == Action.shield:
+            self.p1.shield()
+        elif action == Action.reload:
+            self.p1.reload()
+        elif action == Action.bomb:
+            self.p1.bomb(self.p2, 0, True)
+        else:
+            self.p1.harm_AI(self.p2, True)
 
     def generate_dummy_data(self):
         player_id = 1 # fixed value at this stage since only consider one player game
@@ -138,20 +149,48 @@ class Eval_client:
             'game_state': gamestate,
         }
         return dummy_data
-
     
+    def generate_data_from_input_action(self, action):
+        player_id = 1 # fixed value at this stage since only consider one player game
+        self.handle_action(action)
+        p1_dict = self.p1.get_dict()
+        p2_dict = self.p2.get_dict()
+        gamestate = {
+            'p1': p1_dict,
+            'p2': p2_dict,
+        }
+        self.predicted_gamestate = gamestate
+        dummy_data = {
+            'player_id': player_id,
+            'action': action,
+            'game_state': gamestate,
+        }
+        return dummy_data
     
     def main(self):
         self.socket.connect(self.server_addr)
         print('Evaluation client connected to Evaluation Server')
         self.send_data(isHelloPacket=True)        
         while True:
-            time.sleep(7)
+            # time.sleep(7)
+            # try:
+            #     to_send = self.generate_dummy_data()
+            #     response = self.send_data_with_response(to_send)
+            #     print(response)
+            # except Exception as e:
+            #     print(e)
+
             try:
-                to_send = self.generate_dummy_data()
+                # get input from terminal to input action 
+                input_action = input('Choose an action to perform: ')
+                if input_action not in Action.all:
+                    print('Enter valid action')
+                    continue
+                to_send = self.generate_data_from_input_action(input_action)
                 response = self.send_data_with_response(to_send)
-                print(response)
+                print(response + '\n')
             except Exception as e:
                 print(e)
+
 
         
