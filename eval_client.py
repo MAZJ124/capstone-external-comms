@@ -172,14 +172,6 @@ class Eval_client:
         print('Evaluation client connected to Evaluation Server')
         self.send_data(isHelloPacket=True)        
         while True:
-            # time.sleep(7)
-            # try:
-            #     to_send = self.generate_dummy_data()
-            #     response = self.send_data_with_response(to_send)
-            #     print(response)
-            # except Exception as e:
-            #     print(e)
-
             try:
                 # get input from terminal to input action 
                 input_action = input('Choose an action to perform: ')
