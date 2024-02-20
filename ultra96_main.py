@@ -2,6 +2,7 @@
 import asyncio
 import json
 from multiprocessing import Array, Process, Queue, Value
+import sys
 from EvalClient import EvalClient
 from MockGameEngineProcess import MockGameEngineProcess
 from RelayServerProcess import RelayServerProcess
@@ -9,7 +10,7 @@ from MQTTClientProcess import MqttClientProcess
 
 # evaluation cleint parameters
 EVAL_IP = '127.0.0.1'
-EVAL_PORT = 60650
+# EVAL_PORT = 60650
 GROUP_ID = 'B05'
 SECRET_KEY = 1111111111111111
 
@@ -35,17 +36,20 @@ DEFAULT_GAME_STATE = {
 
 if __name__ == '__main__':
 
-
+    if len(sys.argv) != 2:
+        print('Wrong number of input, plaese specify eval client port number only')
+        sys.exit(1)
+    EVAL_PORT = int(sys.argv[1])
     try:
         processes = []
 
         # relay server
         relay_server_process_instance = RelayServerProcess()
-        to_node = json.dumps(DEFAULT_GAME_STATE)
+        # to_node = json.dumps(DEFAULT_GAME_STATE)
         ai_to_engine_action = Queue()
         engine_to_eval_action = Queue() # action sent to eval client for processing
         relay_server_to_node_gamestate = Queue()
-        relay_server_to_node_gamestate.put(to_node)
+        # relay_server_to_node_gamestate.put(to_node)
 
         relay_server_process = Process(target=relay_server_process_instance.relay_server_process_main, args=(relay_server_to_node_gamestate, ai_to_engine_action))
         processes.append(relay_server_process)
@@ -57,7 +61,7 @@ if __name__ == '__main__':
         engine_to_viz_gamestate = Queue()
         eval_client_to_engine = Queue()
 
-        mock_game_engine_process = Process(target=mock_game_engine_instance.mock_game_engine_process_main, args=(ai_to_engine_action, engine_to_eval_action, eval_client_to_engine, engine_to_viz_gamestate))
+        mock_game_engine_process = Process(target=mock_game_engine_instance.mock_game_engine_process_main, args=(ai_to_engine_action, engine_to_eval_action, eval_client_to_engine, engine_to_viz_gamestate, relay_server_to_node_gamestate))
         processes.append(mock_game_engine_process)
         mock_game_engine_process.start()
 

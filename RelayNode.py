@@ -1,5 +1,6 @@
 import asyncio
 from multiprocessing import Process, Queue
+import sys
 import threading
 from time import perf_counter
 from socket import *
@@ -9,8 +10,8 @@ from Helper import Action
 
 
 class RelayNode:
-    def __init__(self):
-        self.server_hostname = 'localhost'
+    def __init__(self, local):
+        self.server_hostname = 'localhost' if local else 'makerslab-fpga-17.d2.comp.nus.edu.sg'
         self.server_port = 36481
         self.conn_socket = None 
         self.timeout = 600 
@@ -67,7 +68,7 @@ class RelayNode:
     
     async def receive_from_relay_server(self):
         _, _, text = await self.recv_text(self.timeout, self.conn_socket)
-        print('Gamestate received from relay server is: ', text)
+        print('\nGamestate received from relay server is: ', text)
         return text 
     
     def send_to_relay_server(self, msg):
@@ -116,7 +117,10 @@ def get_input_thread(input_action):
         time.sleep(0.5)
 
 if __name__ == '__main__':
-    relay_node = RelayNode()
+    local = False 
+    if len(sys.argv) == 2:
+        local = True
+    relay_node = RelayNode(local)
     relay_node.connect_to_relay_server()
     processes = []
 
