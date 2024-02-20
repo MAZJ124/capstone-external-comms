@@ -13,19 +13,19 @@ class RelayServerProcess:
         self.client_connected = Value('i', 1)
         self.client_socket_update = Queue()
 
-    async def receive_from_relay_node(self):
+    async def receive_from_relay_node(self, identified_action):
         try:
-            msg = await self.relay_server.receive_from_relay_node()
+            action = await self.relay_server.receive_from_relay_node()
             if self.relay_server.is_running:
-                # print('Data received from relay node is: ' + msg)
-                pass
+                print('Data received from relay node is: ' + action)
+                identified_action.put(action)
         except Exception:
             self.relay_server.close_connection()
     
-    def receive_from_relay_node_task(self):
+    def receive_from_relay_node_task(self, identified_action):
         while self.relay_server.is_running:
             try:
-                asyncio.run(self.receive_from_relay_node())
+                asyncio.run(self.receive_from_relay_node(identified_action))
             except Exception as e:
                 print(e)
                 break
@@ -60,11 +60,11 @@ class RelayServerProcess:
         self.relay_server.start_connection()
         try:
 
-            receive_from_relay_node_process = Process(target=self.receive_from_relay_node_task, args=())
+            receive_from_relay_node_process = Process(target=self.receive_from_relay_node_task, args=(identified_action,))
             receive_from_relay_node_process.start()
 
-            generate_random_ai_event_process = Process(target=self.generate_random_ai_event_task, args=(identified_action,))
-            generate_random_ai_event_process.start()
+            # generate_random_ai_event_process = Process(target=self.generate_random_ai_event_task, args=(identified_action,))
+            # generate_random_ai_event_process.start()
             
             send_to_relay_node_process = Process(target=self.send_to_relay_node_task, args=(to_node, self.client_connected))
             send_to_relay_node_process.start()
@@ -74,7 +74,7 @@ class RelayServerProcess:
         
         try:
             self.processes.append(receive_from_relay_node_process)
-            self.processes.append(generate_random_ai_event_process)
+            # self.processes.append(generate_random_ai_event_process)
             self.processes.append(send_to_relay_node_process)
             for p in self.processes:
                 p.join()

@@ -5,10 +5,11 @@ from multiprocessing import Array, Process, Queue, Value
 from EvalClient import EvalClient
 from MockGameEngineProcess import MockGameEngineProcess
 from RelayServerProcess import RelayServerProcess
+from MQTTClientProcess import MqttClientProcess
 
 # evaluation cleint parameters
 EVAL_IP = '127.0.0.1'
-EVAL_PORT = 56345
+EVAL_PORT = 60650
 GROUP_ID = 'B05'
 SECRET_KEY = 1111111111111111
 
@@ -59,6 +60,13 @@ if __name__ == '__main__':
         mock_game_engine_process = Process(target=mock_game_engine_instance.mock_game_engine_process_main, args=(ai_to_engine_action, engine_to_eval_action, eval_client_to_engine, engine_to_viz_gamestate))
         processes.append(mock_game_engine_process)
         mock_game_engine_process.start()
+
+        # MQTT client 
+        mqtt_client_process_instance = MqttClientProcess()
+
+        mqtt_client_process = Process(target=mqtt_client_process_instance.Mqtt_client_process_main, args=(eval_client_to_engine,))
+        processes.append(mqtt_client_process)
+        mqtt_client_process.start()
 
         # eval client
         eval_client_to_server = Queue() # action

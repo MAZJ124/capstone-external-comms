@@ -230,7 +230,7 @@ class EvalClient:
         while True:
             try:
                 action = engine_to_eval_action.get()
-                # print('Data being sent to eval server:', action)
+                print('Action being sent to eval server:', action)
                 eval_client_to_server.put(action)
                 to_send = self.generate_data_from_input_action(action)
                 # print('Data being sent to eval server:', to_send)

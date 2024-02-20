@@ -12,6 +12,7 @@ class MockGameEngineProcess:
         while True:
             try:
                 action = identified_action.get()
+                print('Action at engine: ', action)
                 engine_to_eval.put(action)
             except Exception as e:
                 print(e)
