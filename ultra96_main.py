@@ -64,7 +64,7 @@ if __name__ == '__main__':
         # MQTT client 
         mqtt_client_process_instance = MqttClientProcess()
 
-        mqtt_client_process = Process(target=mqtt_client_process_instance.Mqtt_client_process_main, args=(eval_client_to_engine,))
+        mqtt_client_process = Process(target=mqtt_client_process_instance.Mqtt_client_process_main, args=(engine_to_viz_gamestate,))
         processes.append(mqtt_client_process)
         mqtt_client_process.start()
 
