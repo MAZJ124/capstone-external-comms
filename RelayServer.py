@@ -6,7 +6,7 @@ from time import perf_counter
 class RelayServer:
 
     def __init__(self):
-        self.name = ''
+        self.name = 'localhost'
         self.port1 = 36481
         self.is_running = True 
         self.timeout = 600
@@ -68,7 +68,7 @@ class RelayServer:
 
     async def recv_text(self, timeout):
         conn_socket = self.connection_socket
-        text_received   = ""
+        text_received   = "localhost"
         success         = False
         if self.is_running:
             loop = asyncio.get_event_loop()
@@ -133,7 +133,7 @@ class RelayServer:
         server_socket = socket(AF_INET, SOCK_STREAM)
         server_socket.bind((self.name, self.port1))
         server_socket.listen()
-        print('Listening for connection on: ', self.name, self.port1)
+        print('Relay server listening for connection on: ', self.name, self.port1)
         self.listen_socket = server_socket
         self.is_running = True 
         conn_socket, _ = server_socket.accept()

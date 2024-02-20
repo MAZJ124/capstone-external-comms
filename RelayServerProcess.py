@@ -2,6 +2,7 @@ import asyncio
 from multiprocessing import Process, Value, Queue
 import multiprocessing
 import time
+from Helper import Action
 
 from RelayServer import RelayServer
 
@@ -12,29 +13,16 @@ class RelayServerProcess:
         self.client_connected = Value('i', 1)
         self.client_socket_update = Queue()
 
-    def __getstate__(self) -> object:
-        state = self.__dict__.copy()
-        # for k in state:
-        #     try:
-        #         pickle.dumps(state[k])
-        #     except Exception as e:
-        #         print(e)
-        #         print(k)
-        #         print(state[k])
-        #         print()
-        # del state['processes']
-        return state
-
     async def receive_from_relay_node(self):
         try:
             msg = await self.relay_server.receive_from_relay_node()
             if self.relay_server.is_running:
-                print('Data received from relay node is: ' + msg)
+                # print('Data received from relay node is: ' + msg)
+                pass
         except Exception:
             self.relay_server.close_connection()
     
     def receive_from_relay_node_task(self):
-        print('Receiving')
         while self.relay_server.is_running:
             try:
                 asyncio.run(self.receive_from_relay_node())
@@ -47,7 +35,6 @@ class RelayServerProcess:
         return str(len(encoded)) + '_' + encoded.decode()
 
     def send_to_relay_node_task(self, to_send, is_connected):
-        print('Sending')
         while True:
             try:
                 msg = to_send.get()
@@ -58,15 +45,28 @@ class RelayServerProcess:
                 print(e)
                 break
 
-    def relay_server_process_main(self, to_node, action):
+    def generate_random_ai_event_task(self, identified_action):
+        while True:
+            try:
+                generated_action = Action.get_random_action()
+                identified_action.put(generated_action)
+                # print('action generated is:', generated_action)
+                # engine_to_eval_action.put(generated_action)
+                time.sleep(3)
+            except Exception as e:
+                print(e)
+        
+    def relay_server_process_main(self, to_node, identified_action):
         self.relay_server.start_connection()
-        multiprocessing.set_forkserver_preload(['dill'])
         try:
 
-            receive_from_relay_node_process = Process(target=self.receive_from_relay_node_task, args=(), daemon=True)
+            receive_from_relay_node_process = Process(target=self.receive_from_relay_node_task, args=())
             receive_from_relay_node_process.start()
+
+            generate_random_ai_event_process = Process(target=self.generate_random_ai_event_task, args=(identified_action,))
+            generate_random_ai_event_process.start()
             
-            send_to_relay_node_process = Process(target=self.send_to_relay_node_task, args=(to_node, self.client_connected), daemon=True)
+            send_to_relay_node_process = Process(target=self.send_to_relay_node_task, args=(to_node, self.client_connected))
             send_to_relay_node_process.start()
                 
         except Exception as e:
@@ -74,6 +74,7 @@ class RelayServerProcess:
         
         try:
             self.processes.append(receive_from_relay_node_process)
+            self.processes.append(generate_random_ai_event_process)
             self.processes.append(send_to_relay_node_process)
             for p in self.processes:
                 p.join()

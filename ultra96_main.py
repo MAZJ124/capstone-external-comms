@@ -2,12 +2,13 @@
 import asyncio
 import json
 from multiprocessing import Array, Process, Queue, Value
-from eval_client import Eval_client
+from EvalClient import EvalClient
+from MockGameEngineProcess import MockGameEngineProcess
 from RelayServerProcess import RelayServerProcess
 
 # evaluation cleint parameters
 EVAL_IP = '127.0.0.1'
-EVAL_PORT = 57791
+EVAL_PORT = 56345
 GROUP_ID = 'B05'
 SECRET_KEY = 1111111111111111
 
@@ -33,20 +34,41 @@ DEFAULT_GAME_STATE = {
 
 if __name__ == '__main__':
 
-    # eval_client = Eval_client(EVAL_IP, EVAL_PORT, SECRET_KEY, DEFAULT_GAME_STATE)
-    # eval_client.main()
 
     try:
         processes = []
 
+        # relay server
         relay_server_process_instance = RelayServerProcess()
-        action = Value('i', 0)
         to_node = json.dumps(DEFAULT_GAME_STATE)
-        q = Queue()
-        q.put(to_node)
-        relay_server_process = Process(target=relay_server_process_instance.relay_server_process_main, args=(q, action))
+        ai_to_engine_action = Queue()
+        engine_to_eval_action = Queue() # action sent to eval client for processing
+        relay_server_to_node_gamestate = Queue()
+        relay_server_to_node_gamestate.put(to_node)
+
+        relay_server_process = Process(target=relay_server_process_instance.relay_server_process_main, args=(relay_server_to_node_gamestate, ai_to_engine_action))
         processes.append(relay_server_process)
         relay_server_process.start()
+
+        # mock game engine 
+        mock_game_engine_instance = MockGameEngineProcess()
+        eval_to_engine_gamestate = Queue()
+        engine_to_viz_gamestate = Queue()
+        eval_client_to_engine = Queue()
+
+        mock_game_engine_process = Process(target=mock_game_engine_instance.mock_game_engine_process_main, args=(ai_to_engine_action, engine_to_eval_action, eval_client_to_engine, engine_to_viz_gamestate))
+        processes.append(mock_game_engine_process)
+        mock_game_engine_process.start()
+
+        # eval client
+        eval_client_to_server = Queue() # action
+        eval_client_instance = EvalClient(EVAL_IP, EVAL_PORT, SECRET_KEY, DEFAULT_GAME_STATE)
+        eval_client_instance.initialize()
+
+        eval_client_process = Process(target=eval_client_instance.eval_client_process_main, args=(engine_to_eval_action, eval_client_to_server, eval_client_to_engine))
+        processes.append(eval_client_process)
+        eval_client_process.start()
+
         for p in processes:
             p.join()
     except KeyboardInterrupt:
