@@ -6,7 +6,7 @@ from time import perf_counter
 class RelayServer:
 
     def __init__(self):
-        self.name = 'localhost'
+        self.name = 'makerslab-fpga-17.d2.comp.nus.edu.sg'
         self.port1 = 36481
         self.is_running = True 
         self.timeout = 600
