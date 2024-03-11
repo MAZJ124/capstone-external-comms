@@ -43,6 +43,14 @@ if __name__ == '__main__':
     try:
         processes = []
 
+        '''
+        Processes ran on ultra-96:
+        - Relay Server (to communicate with relay node)
+        - Mock Game Engine (placeholder of actual game engine)
+        - Evaluation Client (to send data over to evaluation server)
+        - MQTT client (to receive gamestate from game engine, and pubish gamestate to visualizer)
+        '''
+
         # relay server
         relay_server_process_instance = RelayServerProcess()
         # to_node = json.dumps(DEFAULT_GAME_STATE)

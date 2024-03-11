@@ -97,15 +97,6 @@ class RelayNode:
             # while True:
             self.send_to_relay_server(str(len(msg)) + '_' + msg)
             # time.sleep(3)
-
-    # def send_to_relay_server_task(self):
-        
-    #     while True:
-    #         action = input('Input AI action generated: ')
-    #         if action not in Action.all:
-    #             print('Invalid action, please retry again')
-    #             continue 
-    #         self.send_to_relay_server(str(len(action)) + '_' + action)
     
 def get_input_thread(input_action):
     while True:
@@ -127,6 +118,13 @@ if __name__ == '__main__':
     input_action = Queue()
 
     try:
+        '''
+        Processes:
+        - Send action to relay server 
+        - Receive gamestate from relay server
+        - (temp) Take in user input as actions to send over to the server
+                 these actions should be replaced by hardware readings sent over via internal comms 
+        '''
         send_to_relay_server_process = Process(target=relay_node.send_to_relay_server_task, args=(input_action,), daemon=True)
         processes.append(send_to_relay_server_process)
         send_to_relay_server_process.start()
@@ -136,14 +134,6 @@ if __name__ == '__main__':
         receive_from_relay_server_process.start()
     except Exception as e:
         print(e)
-
-    # while True:
-    #     action = input('Input AI action generated: ')
-    #     if action not in Action.all:
-    #         print('Invalid action, please retry again')
-    #         continue 
-    #     input_action.put(action)
-    #     time.sleep(0.5)
         
     input_thread = threading.Thread(target=get_input_thread, args=(input_action,))
     input_thread.start()

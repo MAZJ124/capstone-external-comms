@@ -250,6 +250,10 @@ class EvalClient:
     def eval_client_process_main(self, engine_to_eval_action, eval_client_to_server, eval_client_to_engine):
         while self.is_running:
             try:
+                '''
+                One single process for sending and receiving data to and from evaluation server 
+                One receive happens after one send, thus no point using multiple processes for the process
+                '''
                 print('running')
                 asyncio.run(self.eval_client_task(engine_to_eval_action, eval_client_to_server, eval_client_to_engine))
             except Exception as e:

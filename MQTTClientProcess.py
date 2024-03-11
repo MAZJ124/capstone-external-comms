@@ -68,6 +68,11 @@ class MqttClientProcess:
     def Mqtt_client_process_main(self, engine_to_viz):
         # self.publish_client.start_client()
         try:
+            '''
+            Processes:
+            - publish gamestate to visualizer 
+            - subscribe for information (whether player in sight/in range) from visualizer
+            '''
             publish_gamestate_process = Process(target=self.publish_gamestate_to_viz_task, args=(engine_to_viz,), daemon=True)
             publish_gamestate_process.start()
             subscribe_inrange_process = Process(target=self.subscribe_from_viz_task, args=(), daemon=True)

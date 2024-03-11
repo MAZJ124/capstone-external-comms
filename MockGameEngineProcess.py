@@ -30,6 +30,11 @@ class MockGameEngineProcess:
 
     def mock_game_engine_process_main(self, identified_action, engine_to_eval, eval_to_engine_gamestate, engine_to_viz_gamestate, relay_server_to_node_gamestate):
         try:
+            '''
+            Processes:
+            - send actions received from relay server and pass them onto evaluation client
+            - receive gamestate passed from evaluation client and send to relay node and visualizer
+            '''
             send_to_eval_process = Process(target=self.send_to_eval_task, args=(identified_action, engine_to_eval), daemon=False)
             send_to_eval_process.start()
 
