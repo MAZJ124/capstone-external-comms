@@ -136,25 +136,25 @@ if __name__ == '__main__':
         engine_to_viz_gamestate = Queue()
         eval_client_to_engine = Queue()
 
-        mock_game_engine_process = Process(target=mock_game_engine_instance.mock_game_engine_process_main, args=(ai_to_engine_action, engine_to_eval_action, eval_client_to_engine, engine_to_viz_gamestate, relay_server_to_node_gamestate))
-        processes.append(mock_game_engine_process)
-        mock_game_engine_process.start()
+        # mock_game_engine_process = Process(target=mock_game_engine_instance.mock_game_engine_process_main, args=(ai_to_engine_action, engine_to_eval_action, eval_client_to_engine, engine_to_viz_gamestate, relay_server_to_node_gamestate))
+        # processes.append(mock_game_engine_process)
+        # mock_game_engine_process.start()
 
         # MQTT client 
         mqtt_client_process_instance = MqttClientProcess()
 
-        mqtt_client_process = Process(target=mqtt_client_process_instance.Mqtt_client_process_main, args=(engine_to_viz_gamestate,))
-        processes.append(mqtt_client_process)
-        mqtt_client_process.start()
+        # mqtt_client_process = Process(target=mqtt_client_process_instance.Mqtt_client_process_main, args=(engine_to_viz_gamestate,))
+        # processes.append(mqtt_client_process)
+        # mqtt_client_process.start()
 
         # eval client
         eval_client_to_server = Queue() # action
-        eval_client_instance = EvalClient(EVAL_IP, EVAL_PORT, SECRET_KEY, DEFAULT_GAME_STATE)
-        eval_client_instance.initialize()
+        # eval_client_instance = EvalClient(EVAL_IP, EVAL_PORT, SECRET_KEY, DEFAULT_GAME_STATE)
+        # eval_client_instance.initialize()
 
-        eval_client_process = Process(target=eval_client_instance.eval_client_process_main, args=(engine_to_eval_action, eval_client_to_server, eval_client_to_engine))
-        processes.append(eval_client_process)
-        eval_client_process.start()
+        # eval_client_process = Process(target=eval_client_instance.eval_client_process_main, args=(engine_to_eval_action, eval_client_to_server, eval_client_to_engine))
+        # processes.append(eval_client_process)
+        # eval_client_process.start()
 
         for p in processes:
             p.join()

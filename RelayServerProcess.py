@@ -2,9 +2,12 @@ import asyncio
 from multiprocessing import Process, Value, Queue
 import multiprocessing
 import time
+
+import numpy as np
 from Helper import Action
 
 from RelayServer import RelayServer
+from driver import Model
 
 class RelayServerProcess:
     def __init__(self):
@@ -45,37 +48,47 @@ class RelayServerProcess:
                 print(e)
                 break
 
-    def generate_random_ai_event_task(self, identified_action):
-        while True:
-            try:
-                generated_action = Action.get_random_action()
-                identified_action.put(generated_action)
-                # print('action generated is:', generated_action)
-                # engine_to_eval_action.put(generated_action)
-                time.sleep(3)
-            except Exception as e:
-                print(e)
+    # def generate_random_ai_event_task(self, identified_action):
+    #     while True:
+    #         try:
+    #             generated_action = Action.get_random_action()
+    #             identified_action.put(generated_action)
+    #             # print('action generated is:', generated_action)
+    #             # engine_to_eval_action.put(generated_action)
+    #             time.sleep(3)
+    #         except Exception as e:
+    #             print(e)
+
+    def send_data_to_ai_task(self, from_node, identified_action):
+        input_data = from_node
+        print(f'Shape of input data is: {np.array(input_data).shape}')
+        model = Model(r'/home/xilinx/fpga_deployment/week8.bit')
+        predictions = model.get_prediction(input_data)
+        predictions = np.array(predictions)
+        predicted_action = model.get_action(np.argmax(predictions))
+        print(f'Final predicted action is: {predicted_action}')
+        identified_action.put(predicted_action)
         
-    def relay_server_process_main(self, to_node, identified_action):
-        self.relay_server.start_connection()
+    def relay_server_process_main(self, from_node, to_node, identified_action):
+        # self.relay_server.start_connection()
         try:
 
-            receive_from_relay_node_process = Process(target=self.receive_from_relay_node_task, args=(identified_action,))
-            receive_from_relay_node_process.start()
+            # receive_from_relay_node_process = Process(target=self.receive_from_relay_node_task, args=(identified_action,))
+            # receive_from_relay_node_process.start()
 
-            # generate_random_ai_event_process = Process(target=self.generate_random_ai_event_task, args=(identified_action,))
-            # generate_random_ai_event_process.start()
+            send_data_to_ai_process = Process(target=self.send_data_to_ai_task, args=(from_node, identified_action))
+            send_data_to_ai_process.start()
             
-            send_to_relay_node_process = Process(target=self.send_to_relay_node_task, args=(to_node, self.client_connected))
-            send_to_relay_node_process.start()
+            # send_to_relay_node_process = Process(target=self.send_to_relay_node_task, args=(to_node, self.client_connected))
+            # send_to_relay_node_process.start()
                 
         except Exception as e:
             print('Exception raised:', e)
         
         try:
-            self.processes.append(receive_from_relay_node_process)
-            # self.processes.append(generate_random_ai_event_process)
-            self.processes.append(send_to_relay_node_process)
+            # self.processes.append(receive_from_relay_node_process)
+            self.processes.append(send_data_to_ai_process)
+            # self.processes.append(send_to_relay_node_process)
             for p in self.processes:
                 p.join()
         except KeyboardInterrupt:
